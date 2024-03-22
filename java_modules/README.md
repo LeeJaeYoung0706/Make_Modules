@@ -2,7 +2,7 @@
 ## JAVA 모듈
 
 
-### Response
+### Response  // DTO 반환 모듈 
 
 Response에 대해서 많이 고민하고 있습니다.
 
