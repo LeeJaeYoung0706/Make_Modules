@@ -1,0 +1,37 @@
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+
+import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
+
+
+@Configuration
+public class AsyncLogExecutorConfig {
+
+    @Bean(name = "apiLogExecutor")
+    public Executor apiLogExecutor() {
+        ThreadPoolTaskExecutor ex = new ThreadPoolTaskExecutor();
+
+        ex.setCorePoolSize(4);
+        ex.setMaxPoolSize(10);
+
+        // 큐사이즈 조정
+        ex.setQueueCapacity(5000);
+        // 쓰레드 조절
+        ex.setKeepAliveSeconds(60);
+        ex.setAllowCoreThreadTimeOut(true);
+        // 애플리케이션 종료시 처리
+        ex.setWaitForTasksToCompleteOnShutdown(true);
+        ex.setAwaitTerminationSeconds(5);
+
+        ex.setThreadNamePrefix("api-log-");
+
+        // 요청 쓰레드가 실행
+        ex.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+
+        ex.initialize();
+        return ex;
+    }
+}
