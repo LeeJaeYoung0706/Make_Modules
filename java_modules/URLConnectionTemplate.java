@@ -17,33 +17,64 @@ public abstract class URLConnectionTemplate {
     public String urlExecute(String urlString , boolean isReturnString , String formData , boolean isDoOutput) throws IOException {
 
         HttpURLConnection conn = createConnection(urlString);
-
+        // timeout 추가
+        conn.setConnectTimeout(1500);
+        conn.setReadTimeout(2500);
+        
         call(conn , formData);
 
-        if( isDoOutput ) {
-            try (DataOutputStream dos = new DataOutputStream(conn.getOutputStream())) {
-                dos.writeBytes(formData);
+        // if( isDoOutput ) {
+        //     try (DataOutputStream dos = new DataOutputStream(conn.getOutputStream())) {
+        //         dos.writeBytes(formData);
+        //     }
+        // }
+       if (isDoOutput) {
+            // 바이트 단위로 변경
+            byte[] payload = formData.getBytes(StandardCharsets.UTF_8);
+            conn.setRequestProperty("Content-Length", Integer.toString(payload.length));
+
+            try (OutputStream os = conn.getOutputStream()) {
+                os.write(payload);
+                os.flush();
             }
         }
 
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(
-                conn.getInputStream()))) {
-            if (isReturnString) {
-                String line;
-                StringBuilder input = new StringBuilder();
-                while ((line = br.readLine()) != null) {
-                    input.append(line);
-                }
-                return input.toString();
-            } else {
-                String line;
-                StringBuilder input = new StringBuilder();
-                while ((line = br.readLine()) != null) {
-                    input.append(line);
-                }
-                log.info("input = {}" , input);
-                return null;
+        // try (BufferedReader br = new BufferedReader(new InputStreamReader(
+        //         conn.getInputStream()))) {
+        //     if (isReturnString) {
+        //         String line;
+        //         StringBuilder input = new StringBuilder();
+        //         while ((line = br.readLine()) != null) {
+        //             input.append(line);
+        //         }
+        //         return input.toString();
+        //     } else {
+        //         String line;
+        //         StringBuilder input = new StringBuilder();
+        //         while ((line = br.readLine()) != null) {
+        //             input.append(line);
+        //         }
+        //         log.info("input = {}" , input);
+        //         return null;
+        //     }
+        // } finally {
+        //     conn.disconnect();
+        // }
+
+        int code = conn.getResponseCode();
+        InputStream is = (code >= 200 && code < 400) ? conn.getInputStream() : conn.getErrorStream();
+
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+
+            if (!isReturnString) return null;
+
+            String line;
+            StringBuilder input = new StringBuilder();
+            while ((line = br.readLine()) != null) {
+                input.append(line);
             }
+            return input.toString();
+
         } finally {
             conn.disconnect();
         }
@@ -55,5 +86,6 @@ public abstract class URLConnectionTemplate {
         return (HttpURLConnection) url.openConnection();
     }
 }
+
 
 
