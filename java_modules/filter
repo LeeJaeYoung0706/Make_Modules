@@ -1,0 +1,19 @@
+         apiLogExecutor.execute(() -> {
+                try {
+                   1. urlConnectionTemplate.urlExecute(
+                            "https://log.smart-factory.kr/apisvc/sendLogDataJSON.do?",
+                            true,
+                            formData,
+                            true
+                    );
+                   2. service.insertOutBox(formData);
+                } catch (Exception ignore) {
+                    ignore.printStackTrace(); // 예외 처리
+                }
+            });
+
+            필터에서 호출 
+            단, 유실 되어도 상관 없는 데이터 처리 그리고 outbox 처리를 진행하지 않음. -> 1번 단, 추천하지 않음. 운영상에서는 누락될 가능성이 존재
+            새로운 요청사항이 올 경우 테이블 저장 service를 만들고 배치로 해당 테이블을 조회하여 전송하는 이력관리 처리를 진행해야 유실이 없어짐. 
+            필터로 사용할경우 Response를 ContentCachingResponseWrapper responseWrapper = new ContentCachingResponseWrapper(response); 처리해야함.
+            ResponseBodyAdvice 의 경우는 다르게 처리.
